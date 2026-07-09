@@ -124,4 +124,42 @@ apiClient.interceptors.response.use(
   }
 );
 
+export const parseApiError = (err: any): string => {
+  if (!err) return 'An unexpected error occurred.';
+  
+  const responseData = err.response?.data;
+  if (!responseData) {
+    return err.message || 'Unable to connect to the server.';
+  }
+
+  // Case 1: Custom API response with "message" field
+  if (typeof responseData.message === 'string') {
+    return responseData.message;
+  }
+
+  // Case 2: ASP.NET Core validation errors dictionary
+  if (responseData.errors && typeof responseData.errors === 'object') {
+    const errorMessages: string[] = [];
+    Object.entries(responseData.errors).forEach(([field, messages]) => {
+      // If key is like "$.studentProfileId", make it friendly
+      const cleanField = field.startsWith('$.') ? field.slice(2) : field;
+      if (Array.isArray(messages)) {
+        errorMessages.push(`${cleanField}: ${messages.join(', ')}`);
+      } else if (typeof messages === 'string') {
+        errorMessages.push(`${cleanField}: ${messages}`);
+      }
+    });
+    if (errorMessages.length > 0) {
+      return errorMessages.join(' | ');
+    }
+  }
+
+  // Case 3: Problem details with "title" field
+  if (typeof responseData.title === 'string') {
+    return responseData.title;
+  }
+
+  return 'An unexpected error occurred on the server.';
+};
+
 export default apiClient;
