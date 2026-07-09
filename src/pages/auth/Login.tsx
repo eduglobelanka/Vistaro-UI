@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock } from '@mui/icons-material';
 import useAuth from '../../hooks/useAuth';
+import { parseApiError } from '../../services/api-client';
 import VistroLogo from '../../components/common/VistroLogo';
 
 const loginSchema = z.object({
@@ -70,8 +71,7 @@ export const Login: React.FC = () => {
         navigate(from, { replace: true });
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Invalid email or password. Please try again.';
-      setApiError(errorMsg);
+      setApiError(parseApiError(err));
     }
   };
 

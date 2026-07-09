@@ -28,6 +28,7 @@ import {
   Store,
 } from '@mui/icons-material';
 import useAuth from '../../hooks/useAuth';
+import { parseApiError } from '../../services/api-client';
 import VistroLogo from '../../components/common/VistroLogo';
 
 const registerSchema = z.object({
@@ -84,8 +85,7 @@ export const Register: React.FC = () => {
         navigate('/dashboard', { replace: true });
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.response?.data?.errors?.join(', ') || 'Registration failed. Please try again.';
-      setApiError(errorMsg);
+      setApiError(parseApiError(err));
     }
   };
 
