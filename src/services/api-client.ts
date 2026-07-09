@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 import type { AuthResponse } from '../types/auth';
 
-const API_BASE_URL = '';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://vistaro-api-001-hec9a6apcne6hfhc.eastasia-01.azurewebsites.net';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
