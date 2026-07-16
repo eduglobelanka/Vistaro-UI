@@ -47,7 +47,7 @@ export const SearchJobs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -524,7 +524,7 @@ export const SearchJobs: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            You are applying for <strong>{selectedJob?.jobTitle}</strong> at <strong>{selectedJob?.shopName}</strong>. 
+            You are applying for <strong>{selectedJob?.jobTitle}</strong> at <strong>{selectedJob?.shopName}</strong>.
             You can write a short cover letter below to explain why you are a great fit.
           </Typography>
           <TextField

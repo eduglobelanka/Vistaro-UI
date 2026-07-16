@@ -28,6 +28,8 @@ export interface MessageResponseDto {
   studentFullName: string;
   shopName: string;
   relatedJobTitle: string | null;
+  jobApplicationId?: string | null;
+  moderationStatus?: number | null;
 }
 
 export interface SendMessageDto {
@@ -36,6 +38,7 @@ export interface SendMessageDto {
   relatedJobPostingId?: string | null;
   messageText: string;
   messageType: MessageType;
+  jobApplicationId: string;
 }
 
 export interface SendJobInvitationDto {

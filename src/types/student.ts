@@ -70,10 +70,9 @@ export interface AvailableStudentSearchRequestDto {
 
 export interface AvailableStudentSearchResultDto {
   studentProfileId: string;
-  fullName: string;
+  candidateCode: string;
   universityName: string;
   city: string;
-  postcode: string;
   employmentPreference: EmploymentPreference;
   maxHoursPerWeek: number;
   preferredJobCategories: string | null;

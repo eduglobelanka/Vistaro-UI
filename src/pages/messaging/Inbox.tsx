@@ -41,12 +41,15 @@ import type { MessageResponseDto } from '../../types/messaging';
 import { MessageType, InvitationStatus } from '../../types/messaging';
 
 interface ConversationItem {
+  id: string;
   otherUserId: string;
   otherProfileId: string;
   otherName: string;
   lastMessageText: string;
   lastMessageTime: string;
   unreadCount: number;
+  jobApplicationId: string;
+  jobTitle: string;
 }
 
 export const Inbox: React.FC = () => {
@@ -57,17 +60,18 @@ export const Inbox: React.FC = () => {
   const queryUserId = searchParams.get('userId');
   const queryProfileId = searchParams.get('profileId');
   const queryName = searchParams.get('name');
+  const queryJobApplicationId = searchParams.get('jobApplicationId');
 
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
-  const [activeUser, setActiveUser] = useState<{ userId: string; profileId: string; name: string } | null>(null);
+  const [activeUser, setActiveUser] = useState<{ userId: string; profileId: string; name: string; jobApplicationId: string; jobTitle: string } | null>(null);
   const [chatLog, setChatLog] = useState<MessageResponseDto[]>([]);
   const [inputText, setInputText] = useState('');
-  
+
   const [loadingInbox, setLoadingInbox] = useState(true);
   const [loadingChat, setLoadingChat] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
-  
+
   // Student own profile state
   const [studentProfileId, setStudentProfileId] = useState<string | null>(null);
 
@@ -84,7 +88,7 @@ export const Inbox: React.FC = () => {
             setStudentProfileId(res.data.id);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [user]);
 
@@ -94,7 +98,7 @@ export const Inbox: React.FC = () => {
   // Polling intervals
   useEffect(() => {
     fetchInbox();
-    
+
     // Poll inbox every 10 seconds
     const inboxTimer = setInterval(() => {
       fetchInbox();
@@ -107,10 +111,10 @@ export const Inbox: React.FC = () => {
   useEffect(() => {
     if (!activeUser) return;
 
-    fetchChatLog(activeUser.userId, false);
+    fetchChatLog(activeUser.userId, activeUser.jobApplicationId, false);
 
     const chatTimer = setInterval(() => {
-      fetchChatLog(activeUser.userId, false);
+      fetchChatLog(activeUser.userId, activeUser.jobApplicationId, false);
     }, 5000);
 
     return () => clearInterval(chatTimer);
@@ -123,25 +127,30 @@ export const Inbox: React.FC = () => {
         userId: queryUserId,
         profileId: queryProfileId,
         name: queryName,
+        jobApplicationId: queryJobApplicationId || '',
+        jobTitle: 'Job Application',
       };
-      
+
       // Select the conversation
       setActiveUser(activeObj);
-      fetchChatLog(queryUserId, true);
+      fetchChatLog(queryUserId, queryJobApplicationId || '', true);
       setMobileShowChat(true);
-      
+
       // Inject temporary conversation placeholder if not in inbox yet
       setConversations((prev) => {
         const exists = prev.some((c) => c.otherUserId === queryUserId);
         if (exists) return prev;
-        
+
         const newItem: ConversationItem = {
+          id: queryJobApplicationId || '',
           otherUserId: queryUserId,
           otherProfileId: queryProfileId,
           otherName: queryName,
           lastMessageText: 'Starting conversation...',
           lastMessageTime: new Date().toISOString(),
           unreadCount: 0,
+          jobApplicationId: queryJobApplicationId || '',
+          jobTitle: 'Job Application',
         };
         return [newItem, ...prev];
       });
@@ -149,7 +158,7 @@ export const Inbox: React.FC = () => {
       // Clear search parameters to avoid re-triggering
       setSearchParams({});
     }
-  }, [queryUserId, queryProfileId, queryName]);
+  }, [queryUserId, queryProfileId, queryName, queryJobApplicationId]);
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -174,7 +183,8 @@ export const Inbox: React.FC = () => {
     const grouped: { [key: string]: MessageResponseDto[] } = {};
 
     messages.forEach((msg) => {
-      const key = isStudent ? msg.senderUserId : msg.senderUserId;
+      const key = msg.jobApplicationId;
+      if (!key) return; // Ignore legacy messages without jobApplicationId
       if (!grouped[key]) {
         grouped[key] = [];
       }
@@ -184,32 +194,38 @@ export const Inbox: React.FC = () => {
     const items: ConversationItem[] = Object.keys(grouped).map((key) => {
       const thread = grouped[key];
       const latestMsg = thread[0]; // Ordered by CreatedAt desc
+      const otherUserId = latestMsg.senderUserId === user?.id ? latestMsg.receiverUserId : latestMsg.senderUserId;
       const otherProfileId = isStudent ? latestMsg.shopOwnerProfileId : latestMsg.studentProfileId;
       const otherName = isStudent ? latestMsg.shopName : latestMsg.studentFullName;
-      const unreadCount = thread.filter((m) => !m.isRead).length;
+      const unreadCount = thread.filter((m) => m.receiverUserId === user?.id && !m.isRead).length;
 
       return {
-        otherUserId: key,
+        id: key, // jobApplicationId
+        otherUserId: otherUserId,
         otherProfileId: otherProfileId,
         otherName: otherName,
         lastMessageText: latestMsg.messageText,
         lastMessageTime: latestMsg.createdAt,
         unreadCount: unreadCount,
+        jobApplicationId: key,
+        jobTitle: latestMsg.relatedJobTitle || 'Job Application',
       };
     });
 
     setConversations(items);
   };
 
-  const fetchChatLog = async (otherUserId: string, showSpinner = false) => {
+  const fetchChatLog = async (otherUserId: string, targetJobApplicationId: string, showSpinner = false) => {
     if (showSpinner) setLoadingChat(true);
     try {
       const response = await messagingService.getConversation(otherUserId);
       if (response.succeeded && response.data) {
-        setChatLog(response.data);
-        
-        // Mark received messages as read
-        const unread = response.data.filter((m) => m.receiverUserId === user?.id && !m.isRead);
+        // Filter messages for this specific job application
+        const filtered = response.data.filter((m) => m.jobApplicationId === targetJobApplicationId);
+        setChatLog(filtered);
+
+        // Mark received messages for this application as read
+        const unread = filtered.filter((m) => m.receiverUserId === user?.id && !m.isRead);
         for (const msg of unread) {
           try {
             await messagingService.markRead(msg.id);
@@ -230,9 +246,11 @@ export const Inbox: React.FC = () => {
       userId: item.otherUserId,
       profileId: item.otherProfileId,
       name: item.otherName,
+      jobApplicationId: item.jobApplicationId,
+      jobTitle: item.jobTitle,
     };
     setActiveUser(activeObj);
-    fetchChatLog(item.otherUserId, true);
+    fetchChatLog(item.otherUserId, item.jobApplicationId, true);
     setMobileShowChat(true);
   };
 
@@ -249,6 +267,7 @@ export const Inbox: React.FC = () => {
       shopOwnerProfileId: isStudent ? activeUser.profileId : null,
       messageText: inputText.trim(),
       messageType: MessageType.GeneralMessage,
+      jobApplicationId: activeUser.jobApplicationId,
     };
 
     try {
@@ -256,7 +275,7 @@ export const Inbox: React.FC = () => {
       if (response.succeeded && response.data) {
         setInputText('');
         setChatLog((prev) => [...prev, response.data!]);
-        
+
         // Refresh inbox
         fetchInbox();
       }
@@ -306,7 +325,7 @@ export const Inbox: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', flexGrow: 1, height: 'calc(100vh - 140px)', minHeight: 400 }}>
       <Grid container spacing={0} sx={{ height: '100%', border: '1px solid #e2e8f0', borderRadius: 4, overflow: 'hidden', bgcolor: '#ffffff' }}>
-        
+
         {/* LEFT COLUMN: Sidebar Conversation List */}
         <Grid size={{ xs: 12, md: 4 }} sx={{ borderRight: '1px solid #e2e8f0', display: { xs: mobileShowChat ? 'none' : 'flex', md: 'flex' }, flexDirection: 'column', height: '100%' }}>
           <Box sx={{ p: 2, bgcolor: '#f8fafc' }}>
@@ -339,9 +358,9 @@ export const Inbox: React.FC = () => {
               </Box>
             ) : (
               filteredConversations.map((item) => {
-                const isActive = activeUser?.userId === item.otherUserId;
+                const isActive = activeUser?.jobApplicationId === item.jobApplicationId;
                 return (
-                  <React.Fragment key={item.otherUserId}>
+                  <React.Fragment key={item.jobApplicationId}>
                     <ListItem disablePadding>
                       <ListItemButton
                         onClick={() => handleSelectConversation(item)}
@@ -375,23 +394,28 @@ export const Inbox: React.FC = () => {
                             </Box>
                           }
                           secondary={
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                noWrap
-                                sx={{ maxWidth: '80%', fontSize: '0.85rem' }}
-                              >
-                                {item.lastMessageText}
+                            <Box sx={{ mt: 0.25 }}>
+                              <Typography variant="caption" sx={{ color: 'secondary.main', fontWeight: 700, display: 'block', mb: 0.5 }}>
+                                {item.jobTitle}
                               </Typography>
-                              {item.unreadCount > 0 && (
-                                <Chip
-                                  label={item.unreadCount}
-                                  color="error"
-                                  size="small"
-                                  sx={{ height: 18, fontSize: '0.7rem', fontWeight: 700 }}
-                                />
-                              )}
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  noWrap
+                                  sx={{ maxWidth: '85%', fontSize: '0.85rem' }}
+                                >
+                                  {item.lastMessageText}
+                                </Typography>
+                                {item.unreadCount > 0 && (
+                                  <Chip
+                                    label={item.unreadCount}
+                                    color="error"
+                                    size="small"
+                                    sx={{ height: 18, fontSize: '0.7rem', fontWeight: 700 }}
+                                  />
+                                )}
+                              </Box>
                             </Box>
                           }
                         />
@@ -409,7 +433,7 @@ export const Inbox: React.FC = () => {
         <Grid size={{ xs: 12, md: 8 }} sx={{ display: { xs: mobileShowChat ? 'flex' : 'none', md: 'flex' }, flexDirection: 'column', height: '100%', bgcolor: '#f8fafc' }}>
           {activeUser ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              
+
               {/* Chat Header */}
               <Box sx={{ p: 2, bgcolor: '#ffffff', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 {isMobile && (
@@ -420,13 +444,16 @@ export const Inbox: React.FC = () => {
                 <Avatar sx={{ bgcolor: 'secondary.main', fontWeight: 700 }}>
                   {getInitials(activeUser.name)}
                 </Avatar>
-                <Box>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0f2c59' }}>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#0f2c59', lineHeight: 1.2 }}>
                     {activeUser.name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
                     {user?.roles.includes('Student') ? <Store sx={{ fontSize: 12 }} /> : <Person sx={{ fontSize: 12 }} />}
                     {user?.roles.includes('Student') ? 'Employer Partner' : 'Candidate Student'}
+                  </Typography>
+                  <Typography variant="caption" color="secondary.main" sx={{ display: 'block', fontWeight: 700, mt: 0.25 }}>
+                    Regarding: {activeUser.jobTitle}
                   </Typography>
                 </Box>
               </Box>
@@ -455,7 +482,7 @@ export const Inbox: React.FC = () => {
                               <Typography variant="subtitle2" sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 0.5, color: 'secondary.main', mb: 1.5 }}>
                                 <WorkOutlined sx={{ fontSize: 16 }} /> Job Opportunity Invitation
                               </Typography>
-                              
+
                               <Box sx={{ bgcolor: '#f0fdfa', p: 1.5, borderRadius: 2, mb: 2 }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#0f2c59' }}>
                                   {msg.relatedJobTitle || 'Job Opening'}
@@ -525,9 +552,15 @@ export const Inbox: React.FC = () => {
                             <Typography
                               variant="caption"
                               color="text.secondary"
-                              sx={{ mt: 0.5, display: 'block', textAlign: isSelf ? 'right' : 'left', fontSize: '0.75rem' }}
+                              sx={{ mt: 0.5, display: 'flex', alignItems: 'center', justifyContent: isSelf ? 'flex-end' : 'flex-start', gap: 0.5, fontSize: '0.75rem' }}
                             >
                               {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              {isSelf && msg.moderationStatus === 1 && (
+                                <span style={{ color: '#d97706', fontWeight: 600 }}>• Pending Moderation</span>
+                              )}
+                              {isSelf && msg.moderationStatus === 3 && (
+                                <span style={{ color: '#dc2626', fontWeight: 600 }}>• Rejected by Admin</span>
+                              )}
                             </Typography>
                           </Box>
                         )}

@@ -36,7 +36,6 @@ import {
   Add,
   Edit,
   Delete,
-  CheckCircle,
   Cancel,
   Visibility,
   Publish,
@@ -47,9 +46,9 @@ import {
   Send,
 } from '@mui/icons-material';
 import jobPostingService from '../../services/job-posting.service';
-import jobApplicationService from '../../services/job-application.service';
+import jobApplicationsApi from '../../services/jobApplicationsApi';
 import shopOwnerService from '../../services/shop-owner.service';
-import messagingService from '../../services/messaging.service';
+import contactReleaseApi from '../../services/contactReleaseApi';
 import type {
   JobPostingResponseDto,
   SaveJobPostingDto,
@@ -106,14 +105,14 @@ export const ManageJobs: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [businessVerified, setBusinessVerified] = useState(false);
   const [isVerifiedCheckLoading, setIsVerifiedCheckLoading] = useState(true);
-  
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Dialog states
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<JobPostingResponseDto | null>(null);
-  
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
@@ -121,11 +120,16 @@ export const ManageJobs: React.FC = () => {
   const [selectedCoverMessage, setSelectedCoverMessage] = useState<string | null>(null);
   const [selectedCandidateName, setSelectedCandidateName] = useState<string>('');
 
-  // Invitation states
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  // Moderated Message states
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<JobApplicationResponseDto | null>(null);
-  const [inviteMessage, setInviteMessage] = useState('');
-  const [sendingInvite, setSendingInvite] = useState(false);
+  const [moderatedMessageText, setModeratedMessageText] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+
+  // Contact Release states
+  const [contactReleaseDialogOpen, setContactReleaseDialogOpen] = useState(false);
+  const [contactReleaseReason, setContactReleaseReason] = useState('');
+  const [submittingRelease, setSubmittingRelease] = useState(false);
 
   const {
     register,
@@ -181,7 +185,7 @@ export const ManageJobs: React.FC = () => {
         setPostings(postsRes.data);
       }
 
-      const appsRes = await jobApplicationService.getEmployerApplications();
+      const appsRes = await jobApplicationsApi.getEmployerApplications();
       if (appsRes.succeeded && appsRes.data) {
         setApplications(appsRes.data);
       }
@@ -323,45 +327,104 @@ export const ManageJobs: React.FC = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
     try {
-      const response = await jobApplicationService.updateApplicationStatus(appId, { status: newStatus });
+      const response = await jobApplicationsApi.updateApplicationStatus(appId, { status: newStatus });
       if (response.succeeded) {
         setSuccessMessage('Application status updated.');
-        setApplications((prev) =>
-          prev.map((app) => (app.id === appId ? { ...app, status: newStatus } : app))
-        );
+        fetchData();
+      } else {
+        setErrorMessage(response.message || 'Failed to update status.');
       }
     } catch {
       setErrorMessage('Failed to update candidate application status.');
     }
   };
 
-  const openInviteDialog = (app: JobApplicationResponseDto) => {
-    setSelectedApp(app);
-    setInviteMessage(`Hi ${app.studentFullName}, we reviewed your application for the ${app.jobTitle} position and would love to invite you for an interview chat! Let us know your availability.`);
-    setInviteDialogOpen(true);
-  };
-
-  const handleSendInvite = async () => {
-    if (!selectedApp) return;
-    setSendingInvite(true);
+  const handleRequestInterview = async (appId: string) => {
     setErrorMessage(null);
     setSuccessMessage(null);
     try {
-      const response = await messagingService.sendJobInvitation({
-        studentProfileId: selectedApp.studentProfileId,
-        jobPostingId: selectedApp.jobPostingId,
-        messageText: inviteMessage.trim()
+      const response = await jobApplicationsApi.requestInterview(appId);
+      if (response.succeeded) {
+        setSuccessMessage('Interview request submitted to Vistaro Admin for coordination.');
+        fetchData();
+      } else {
+        setErrorMessage(response.message || 'Failed to request interview.');
+      }
+    } catch {
+      setErrorMessage('Error occurred while requesting interview.');
+    }
+  };
+
+  const handleConditionalOffer = async (appId: string) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      const response = await jobApplicationsApi.makeConditionalOffer(appId);
+      if (response.succeeded) {
+        setSuccessMessage('Conditional job offer submitted successfully.');
+        fetchData();
+      } else {
+        setErrorMessage(response.message || 'Failed to submit conditional offer.');
+      }
+    } catch {
+      setErrorMessage('Error occurred while making conditional offer.');
+    }
+  };
+
+  const openMessageDialog = (app: JobApplicationResponseDto) => {
+    setSelectedApp(app);
+    setModeratedMessageText('');
+    setMessageDialogOpen(true);
+  };
+
+  const handleSendModeratedMessage = async () => {
+    if (!selectedApp || !moderatedMessageText.trim()) return;
+    setSendingMessage(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      const response = await jobApplicationsApi.sendModeratedMessage({
+        jobApplicationId: selectedApp.id,
+        messageText: moderatedMessageText.trim()
       });
       if (response.succeeded) {
-        setSuccessMessage(`Job invitation sent to ${selectedApp.studentFullName}!`);
-        setInviteDialogOpen(false);
+        setSuccessMessage('Your message has been submitted and is pending admin moderation review.');
+        setMessageDialogOpen(false);
       } else {
-        setErrorMessage(response.message || 'Failed to send invitation.');
+        setErrorMessage(response.message || 'Failed to send message.');
       }
-    } catch (err: any) {
-      setErrorMessage(err.response?.data?.message || 'Failed to send job invitation. Make sure you are verified.');
+    } catch {
+      setErrorMessage('Failed to send message.');
     } finally {
-      setSendingInvite(false);
+      setSendingMessage(false);
+    }
+  };
+
+  const openContactReleaseDialog = (app: JobApplicationResponseDto) => {
+    setSelectedApp(app);
+    setContactReleaseReason('');
+    setContactReleaseDialogOpen(true);
+  };
+
+  const handleRequestContactRelease = async () => {
+    if (!selectedApp || !contactReleaseReason.trim()) return;
+    setSubmittingRelease(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      const response = await contactReleaseApi.requestContactRelease(selectedApp.id, {
+        reason: contactReleaseReason.trim()
+      });
+      if (response.succeeded) {
+        setSuccessMessage('Contact details release request submitted to Vistaro Admin.');
+        setContactReleaseDialogOpen(false);
+      } else {
+        setErrorMessage(response.message || 'Failed to request contact release.');
+      }
+    } catch {
+      setErrorMessage('Failed to request contact release.');
+    } finally {
+      setSubmittingRelease(false);
     }
   };
 
@@ -400,19 +463,44 @@ export const ManageJobs: React.FC = () => {
     return <Chip label="Draft" color="warning" size="small" sx={{ fontWeight: 600 }} />;
   };
 
+  const STATUS_LABELS: Record<number, string> = {
+    [JobApplicationStatus.SubmittedToAdmin]: 'Submitted to Vistaro',
+    [JobApplicationStatus.AdminReview]: 'Under Admin Review',
+    [JobApplicationStatus.MoreInformationRequired]: 'More Info Required',
+    [JobApplicationStatus.ApprovedForEmployer]: 'Approved for Review',
+    [JobApplicationStatus.RejectedByAdmin]: 'Rejected by Admin',
+    [JobApplicationStatus.EmployerReview]: 'Employer Reviewing',
+    [JobApplicationStatus.Shortlisted]: 'Shortlisted',
+    [JobApplicationStatus.InterviewRequested]: 'Interview Requested',
+    [JobApplicationStatus.InterviewApproved]: 'Interview Approved',
+    [JobApplicationStatus.OfferPending]: 'Conditional Offer',
+    [JobApplicationStatus.OfferAccepted]: 'Offer Accepted',
+    [JobApplicationStatus.Hired]: 'Hired',
+    [JobApplicationStatus.RejectedByEmployer]: 'Rejected by Employer',
+    [JobApplicationStatus.Withdrawn]: 'Withdrawn',
+  };
+
   const getAppStatusChip = (status: JobApplicationStatus) => {
+    const label = STATUS_LABELS[status] || 'Unknown';
     switch (status) {
-      case JobApplicationStatus.Accepted:
-        return <Chip label="Accepted" color="success" size="small" sx={{ fontWeight: 600 }} />;
-      case JobApplicationStatus.Rejected:
-        return <Chip label="Rejected" color="error" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.OfferAccepted:
+      case JobApplicationStatus.Hired:
+      case JobApplicationStatus.ApprovedForEmployer:
+        return <Chip label={label} color="success" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.RejectedByAdmin:
+      case JobApplicationStatus.RejectedByEmployer:
+        return <Chip label={label} color="error" size="small" sx={{ fontWeight: 600 }} />;
       case JobApplicationStatus.Shortlisted:
-        return <Chip label="Shortlisted" color="primary" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.InterviewApproved:
+        return <Chip label={label} color="primary" size="small" sx={{ fontWeight: 600 }} />;
       case JobApplicationStatus.Withdrawn:
-        return <Chip label="Withdrawn" color="default" size="small" sx={{ fontWeight: 600 }} />;
-      case JobApplicationStatus.Pending:
+        return <Chip label={label} color="default" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.MoreInformationRequired:
+        return <Chip label={label} color="warning" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.SubmittedToAdmin:
+      case JobApplicationStatus.AdminReview:
       default:
-        return <Chip label="Pending" color="warning" size="small" sx={{ fontWeight: 600 }} />;
+        return <Chip label={label} color="info" size="small" sx={{ fontWeight: 600 }} />;
     }
   };
 
@@ -454,7 +542,7 @@ export const ManageJobs: React.FC = () => {
 
       {!businessVerified && (
         <Alert severity="warning" icon={<Block />} sx={{ mb: 4 }}>
-          <strong>Action Blocked:</strong> Your business account verification is pending or rejected. 
+          <strong>Action Blocked:</strong> Your business account verification is pending or rejected.
           You must upload valid documents under <strong>Upload Verification</strong> and wait for admin approval before you can create active job listings.
         </Alert>
       )}
@@ -513,7 +601,7 @@ export const ManageJobs: React.FC = () => {
                         </Typography>
                         {getPostStatusChip(post.status)}
                       </Box>
-                      
+
                       <Typography variant="body2" color="text.secondary" sx={{
                         mb: 2.5,
                         display: '-webkit-box',
@@ -604,8 +692,8 @@ export const ManageJobs: React.FC = () => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Candidate Name</TableCell>
-                    <TableCell>Email</TableCell>
+                    <TableCell>Candidate Name / Code</TableCell>
+                    <TableCell>Contact Details</TableCell>
                     <TableCell>Job Applied For</TableCell>
                     <TableCell>Applied Date</TableCell>
                     <TableCell>Status</TableCell>
@@ -614,67 +702,100 @@ export const ManageJobs: React.FC = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {applications.map((app) => (
-                    <TableRow key={app.id} hover>
-                      <TableCell sx={{ fontWeight: 600 }}>{app.studentFullName}</TableCell>
-                      <TableCell>{app.studentEmail}</TableCell>
-                      <TableCell sx={{ fontWeight: 500 }}>{app.jobTitle}</TableCell>
-                      <TableCell>{new Date(app.appliedAt).toLocaleDateString()}</TableCell>
-                      <TableCell>{getAppStatusChip(app.status)}</TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          color="secondary"
-                          title="Read Cover Message"
-                          onClick={() => openCoverLetter(app.coverMessage, app.studentFullName)}
-                        >
-                          <Visibility />
-                        </IconButton>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                          <Button
-                            size="small"
-                            variant="contained"
+                  {applications.map((app) => {
+                    const isCandidateActive = app.status !== JobApplicationStatus.Withdrawn && app.status !== JobApplicationStatus.RejectedByEmployer && app.status !== JobApplicationStatus.RejectedByAdmin;
+                    return (
+                      <TableRow key={app.id} hover>
+                        <TableCell sx={{ fontWeight: 600 }}>
+                          {app.isContactReleased ? app.studentFullName : app.candidateCode}
+                        </TableCell>
+                        <TableCell>
+                          {app.isContactReleased ? (
+                            <Box>
+                              <Typography variant="body2">{app.studentEmail || 'No email'}</Typography>
+                              <Typography variant="caption" color="text.secondary">{app.studentPhoneNumber || 'No phone'}</Typography>
+                            </Box>
+                          ) : (
+                            <Chip label="Hidden until Admin approval" size="small" variant="outlined" />
+                          )}
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 500 }}>{app.jobTitle}</TableCell>
+                        <TableCell>{new Date(app.appliedAt).toLocaleDateString()}</TableCell>
+                        <TableCell>{getAppStatusChip(app.status)}</TableCell>
+                        <TableCell align="center">
+                          <IconButton
                             color="secondary"
-                            startIcon={<Send />}
-                            onClick={() => openInviteDialog(app)}
-                            disabled={app.status === JobApplicationStatus.Withdrawn || app.status === JobApplicationStatus.Rejected}
+                            title="Read Cover Message"
+                            onClick={() => openCoverLetter(app.coverMessage, app.isContactReleased ? app.studentFullName : app.candidateCode)}
                           >
-                            Invite
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color="success"
-                            startIcon={<CheckCircle />}
-                            onClick={() => handleUpdateAppStatus(app.id, JobApplicationStatus.Accepted)}
-                            disabled={app.status === JobApplicationStatus.Accepted || app.status === JobApplicationStatus.Rejected || app.status === JobApplicationStatus.Withdrawn}
-                          >
-                            Accept
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleUpdateAppStatus(app.id, JobApplicationStatus.Shortlisted)}
-                            disabled={app.status === JobApplicationStatus.Accepted || app.status === JobApplicationStatus.Rejected || app.status === JobApplicationStatus.Withdrawn || app.status === JobApplicationStatus.Shortlisted}
-                          >
-                            Shortlist
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="contained"
-                            color="error"
-                            startIcon={<Cancel />}
-                            onClick={() => handleUpdateAppStatus(app.id, JobApplicationStatus.Rejected)}
-                            disabled={app.status === JobApplicationStatus.Accepted || app.status === JobApplicationStatus.Rejected || app.status === JobApplicationStatus.Withdrawn}
-                          >
-                            Reject
-                          </Button>
-                        </Stack>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                            <Visibility />
+                          </IconButton>
+                        </TableCell>
+                        <TableCell align="right">
+                          <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', flexWrap: 'wrap', gap: 1 }}>
+                            {!app.isContactReleased && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="warning"
+                                onClick={() => openContactReleaseDialog(app)}
+                                disabled={!isCandidateActive}
+                              >
+                                Request Contact Release
+                              </Button>
+                            )}
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="secondary"
+                              startIcon={<Send />}
+                              onClick={() => openMessageDialog(app)}
+                              disabled={!isCandidateActive}
+                            >
+                              Message
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="secondary"
+                              onClick={() => handleRequestInterview(app.id)}
+                              disabled={!isCandidateActive || app.status >= JobApplicationStatus.InterviewRequested}
+                            >
+                              Request Interview
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="success"
+                              onClick={() => handleConditionalOffer(app.id)}
+                              disabled={!isCandidateActive || app.status >= JobApplicationStatus.OfferPending}
+                            >
+                              Make Offer
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                              onClick={() => handleUpdateAppStatus(app.id, JobApplicationStatus.Shortlisted)}
+                              disabled={!isCandidateActive || app.status === JobApplicationStatus.Shortlisted || app.status >= JobApplicationStatus.InterviewRequested}
+                            >
+                              Shortlist
+                            </Button>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="error"
+                              startIcon={<Cancel />}
+                              onClick={() => handleUpdateAppStatus(app.id, JobApplicationStatus.RejectedByEmployer)}
+                              disabled={!isCandidateActive}
+                            >
+                              Reject
+                            </Button>
+                          </Stack>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -715,38 +836,74 @@ export const ManageJobs: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Invite Candidate Dialog */}
-      <Dialog open={inviteDialogOpen} onClose={() => setInviteDialogOpen(false)} maxWidth="sm" fullWidth>
+      {/* Moderated Message Dialog */}
+      <Dialog open={messageDialogOpen} onClose={() => setMessageDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 700 }}>
-          Send Job Invitation
+          Send Moderated Message
         </DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Invite <strong>{selectedApp?.studentFullName}</strong> to interview or chat about your job opening: <strong>{selectedApp?.jobTitle}</strong>. 
-            This will initiate a chat conversation log in your inbox.
+            Send a moderated message to <strong>{selectedApp?.isContactReleased ? selectedApp?.studentFullName : selectedApp?.candidateCode}</strong>.
+            All messages are queued for Admin moderation before delivery.
           </DialogContentText>
           <TextField
             fullWidth
             multiline
             rows={4}
-            label="Invitation Greeting Message"
-            value={inviteMessage}
-            onChange={(e) => setInviteMessage(e.target.value)}
+            label="Message Content"
+            value={moderatedMessageText}
+            onChange={(e) => setModeratedMessageText(e.target.value)}
           />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
-          <Button onClick={() => setInviteDialogOpen(false)} color="inherit">
+          <Button onClick={() => setMessageDialogOpen(false)} color="inherit">
             Cancel
           </Button>
           <Button
-            onClick={handleSendInvite}
+            onClick={handleSendModeratedMessage}
             variant="contained"
             color="secondary"
-            disabled={sendingInvite}
+            disabled={sendingMessage || !moderatedMessageText.trim()}
             startIcon={<Send />}
             sx={{ fontWeight: 700 }}
           >
-            {sendingInvite ? 'Sending...' : 'Send Invitation'}
+            {sendingMessage ? 'Sending...' : 'Send Message'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Request Contact Release Dialog */}
+      <Dialog open={contactReleaseDialogOpen} onClose={() => setContactReleaseDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 700 }}>
+          Request Candidate Contact Release
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 2 }}>
+            Request the Admin to release contact details (Email, Phone) for candidate <strong>{selectedApp?.candidateCode}</strong>. 
+            Specify the business justification (e.g. scheduling on-site interviews).
+          </DialogContentText>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Justification Reason"
+            placeholder="Reason for release request..."
+            value={contactReleaseReason}
+            onChange={(e) => setContactReleaseReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setContactReleaseDialogOpen(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRequestContactRelease}
+            variant="contained"
+            color="warning"
+            disabled={submittingRelease || !contactReleaseReason.trim()}
+            sx={{ fontWeight: 700 }}
+          >
+            {submittingRelease ? 'Submitting...' : 'Submit Request'}
           </Button>
         </DialogActions>
       </Dialog>

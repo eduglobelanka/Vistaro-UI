@@ -106,17 +106,35 @@ export const MyApplications: React.FC = () => {
 
   const getStatusChip = (status: JobApplicationStatus) => {
     switch (status) {
-      case JobApplicationStatus.Accepted:
-        return <Chip label="Accepted" color="success" size="small" sx={{ fontWeight: 600 }} />;
-      case JobApplicationStatus.Rejected:
-        return <Chip label="Rejected" color="error" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.SubmittedToAdmin:
+        return <Chip label="Submitted to Admin" color="info" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.AdminReview:
+        return <Chip label="Under Admin Review" color="info" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.MoreInformationRequired:
+        return <Chip label="More Info Requested" color="warning" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.ApprovedForEmployer:
+      case JobApplicationStatus.EmployerReview:
+        return <Chip label="Under Employer Review" color="primary" size="small" sx={{ fontWeight: 600 }} />;
       case JobApplicationStatus.Shortlisted:
         return <Chip label="Shortlisted" color="primary" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.InterviewRequested:
+        return <Chip label="Interview Requested" color="secondary" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.InterviewApproved:
+        return <Chip label="Interview Approved" color="secondary" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.OfferPending:
+        return <Chip label="Offer Pending" color="success" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.OfferAccepted:
+        return <Chip label="Offer Accepted" color="success" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.Hired:
+        return <Chip label="Hired" color="success" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.RejectedByAdmin:
+        return <Chip label="Rejected by Admin" color="error" size="small" sx={{ fontWeight: 600 }} />;
+      case JobApplicationStatus.RejectedByEmployer:
+        return <Chip label="Rejected by Employer" color="error" size="small" sx={{ fontWeight: 600 }} />;
       case JobApplicationStatus.Withdrawn:
         return <Chip label="Withdrawn" color="default" size="small" sx={{ fontWeight: 600 }} />;
-      case JobApplicationStatus.Pending:
       default:
-        return <Chip label="Pending Review" color="warning" size="small" sx={{ fontWeight: 600 }} />;
+        return <Chip label="Pending" color="warning" size="small" sx={{ fontWeight: 600 }} />;
     }
   };
 
@@ -168,7 +186,7 @@ export const MyApplications: React.FC = () => {
         <Grid container spacing={3}>
           {applications.map((app) => (
             <Grid size={12} key={app.id}>
-              <Card sx={{ borderLeft: '5px solid', borderColor: app.status === JobApplicationStatus.Accepted ? 'success.main' : app.status === JobApplicationStatus.Rejected ? 'error.main' : 'primary.light' }}>
+              <Card sx={{ borderLeft: '5px solid', borderColor: app.status === JobApplicationStatus.OfferAccepted || app.status === JobApplicationStatus.Hired ? 'success.main' : app.status === JobApplicationStatus.RejectedByAdmin || app.status === JobApplicationStatus.RejectedByEmployer ? 'error.main' : 'primary.light' }}>
                 <CardContent sx={{ p: 3 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1.5, mb: 2 }}>
                     <Box>
@@ -222,7 +240,7 @@ export const MyApplications: React.FC = () => {
                       variant="contained"
                       startIcon={<RemoveCircleOutlined />}
                       onClick={() => openWithdrawDialog(app.id, app.jobTitle)}
-                      disabled={app.status === JobApplicationStatus.Withdrawn || app.status === JobApplicationStatus.Accepted || app.status === JobApplicationStatus.Rejected}
+                      disabled={app.status === JobApplicationStatus.Withdrawn || app.status === JobApplicationStatus.OfferAccepted || app.status === JobApplicationStatus.Hired || app.status === JobApplicationStatus.RejectedByAdmin || app.status === JobApplicationStatus.RejectedByEmployer}
                     >
                       Withdraw
                     </Button>
@@ -241,7 +259,7 @@ export const MyApplications: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to withdraw your application for <strong>{selectedJobTitle}</strong>? 
+            Are you sure you want to withdraw your application for <strong>{selectedJobTitle}</strong>?
             This action is final and the employer will be notified of your withdrawal.
           </DialogContentText>
         </DialogContent>

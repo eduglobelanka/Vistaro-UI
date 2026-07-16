@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -23,7 +22,6 @@ import {
 import {
   Search,
   Person,
-  ChatBubbleOutlined,
   School,
   LocationOn,
   AccessTime,
@@ -33,7 +31,6 @@ import type { AvailableStudentSearchResultDto } from '../../types/student';
 import { EmploymentPreference, VisaType } from '../../types/student';
 
 export const SearchStudents: React.FC = () => {
-  const navigate = useNavigate();
 
   // Filter States
   const [city, setCity] = useState('');
@@ -90,19 +87,7 @@ export const SearchStudents: React.FC = () => {
     fetchCandidates();
   };
 
-  const handleMessageCandidate = (student: AvailableStudentSearchResultDto) => {
-    // Navigate to inbox with query parameters to initiate conversation
-    navigate(`/messages?userId=${encodeURIComponent(student.studentProfileId)}&profileId=${encodeURIComponent(student.studentProfileId)}&name=${encodeURIComponent(student.fullName)}`);
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  // Direct messages and initials helper are disabled for candidate search anonymity
 
   return (
     <Box>
@@ -216,12 +201,12 @@ export const SearchStudents: React.FC = () => {
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', boxShadow: '0px 4px 12px rgba(0,0,0,0.03)', borderRadius: 2, border: '1px solid #f1f5f9' }}>
                   <CardContent sx={{ flexGrow: 1, p: 3 }}>
                     <Stack direction="row" spacing={2} sx={{ mb: 2.5 }}>
-                      <Avatar sx={{ bgcolor: 'secondary.main', fontWeight: 700, width: 48, height: 48 }}>
-                        {getInitials(student.fullName)}
+                      <Avatar sx={{ bgcolor: 'secondary.main', width: 48, height: 48 }}>
+                        <Person />
                       </Avatar>
                       <Box sx={{ overflow: 'hidden' }}>
                         <Typography variant="h6" noWrap sx={{ fontWeight: 700, color: '#0f2c59', mb: 0.5 }}>
-                          {student.fullName}
+                          {student.candidateCode}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.85rem' }}>
                           <School sx={{ fontSize: 14 }} /> {student.universityName}
@@ -232,7 +217,7 @@ export const SearchStudents: React.FC = () => {
                     <Stack spacing={1.5} sx={{ mb: 2.5 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
-                        <Typography variant="body2" color="text.secondary">{student.city} ({student.postcode})</Typography>
+                        <Typography variant="body2" color="text.secondary">{student.city}</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <AccessTime sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -262,16 +247,9 @@ export const SearchStudents: React.FC = () => {
                     )}
                   </CardContent>
                   <Box sx={{ p: 2, pt: 0 }}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      color="secondary"
-                      startIcon={<ChatBubbleOutlined />}
-                      onClick={() => handleMessageCandidate(student)}
-                      sx={{ fontWeight: 700 }}
-                    >
-                      Message Candidate
-                    </Button>
+                    <Alert severity="info" icon={<Person sx={{ fontSize: 20 }} />} sx={{ fontSize: '0.775rem', py: 0.5, borderRadius: 2 }}>
+                      Recruitment is admin-mediated. To contact, invite this candidate via a job posting.
+                    </Alert>
                   </Box>
                 </Card>
               </Grid>

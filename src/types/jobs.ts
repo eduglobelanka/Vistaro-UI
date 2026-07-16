@@ -27,12 +27,23 @@ export const JobPostingStatus = {
 } as const;
 export type JobPostingStatus = typeof JobPostingStatus[keyof typeof JobPostingStatus];
 
+import type { AdminReviewStatus, EmployerApplicationStatus } from './recruitment';
+
 export const JobApplicationStatus = {
-  Pending: 1,
-  Shortlisted: 2,
-  Accepted: 3,
-  Rejected: 4,
-  Withdrawn: 5,
+  SubmittedToAdmin: 1,
+  AdminReview: 2,
+  MoreInformationRequired: 3,
+  ApprovedForEmployer: 4,
+  RejectedByAdmin: 5,
+  EmployerReview: 6,
+  Shortlisted: 7,
+  InterviewRequested: 8,
+  InterviewApproved: 9,
+  OfferPending: 10,
+  OfferAccepted: 11,
+  Hired: 12,
+  RejectedByEmployer: 13,
+  Withdrawn: 14,
 } as const;
 export type JobApplicationStatus = typeof JobApplicationStatus[keyof typeof JobApplicationStatus];
 
@@ -127,15 +138,25 @@ export interface JobApplicationResponseDto {
   studentProfileId: string;
   coverMessage: string | null;
   status: JobApplicationStatus;
+  adminReviewStatus: AdminReviewStatus;
+  adminComment: string | null;
+  employerStatus: EmployerApplicationStatus;
   appliedAt: string;
   updatedAt: string | null;
+  adminReviewedAt: string | null;
+  employerReviewedAt: string | null;
+  interviewRequestedAt: string | null;
+  contactReleasedAt: string | null;
+  isContactReleased: boolean;
   isActive: boolean;
   jobTitle: string;
   jobCategory: string;
   jobCity: string;
   shopName: string;
   studentFullName: string;
-  studentEmail: string;
+  candidateCode: string;
+  studentEmail: string | null;
+  studentPhoneNumber: string | null;
   studentCity: string;
 }
 

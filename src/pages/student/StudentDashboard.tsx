@@ -96,7 +96,7 @@ export const StudentDashboard: React.FC = () => {
       const response = await studentService.getProfile();
       if (response.succeeded && response.data) {
         setHasProfile(true);
-        
+
         // Load statistics
         try {
           const appsRes = await jobApplicationService.getMyApplications();
@@ -104,7 +104,7 @@ export const StudentDashboard: React.FC = () => {
             setAppCount(appsRes.data.length);
             setAppliedJobIds(new Set(appsRes.data.map((app) => app.jobPostingId)));
           }
-        } catch {}
+        } catch { }
 
         try {
           const inboxRes = await messagingService.getInbox();
@@ -114,7 +114,7 @@ export const StudentDashboard: React.FC = () => {
             ).length;
             setInvitationCount(count);
           }
-        } catch {}
+        } catch { }
 
         // Load initial jobs
         await triggerSearch(1);
@@ -632,7 +632,7 @@ export const StudentDashboard: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>
-            You are applying for the role of <strong>{selectedJob?.jobTitle}</strong> at <strong>{selectedJob?.shopName}</strong>. 
+            You are applying for the role of <strong>{selectedJob?.jobTitle}</strong> at <strong>{selectedJob?.shopName}</strong>.
             Introduce yourself to the employer with a brief cover message outlining your availability and fit.
           </Typography>
           <TextField

@@ -34,7 +34,7 @@ export const EmployerDashboard: React.FC = () => {
           if (jobsRes.succeeded && jobsRes.data) {
             setPostCount(jobsRes.data.length);
           }
-        } catch {}
+        } catch { }
 
         // Fetch received applications count
         try {
@@ -42,7 +42,7 @@ export const EmployerDashboard: React.FC = () => {
           if (appsRes.succeeded && appsRes.data) {
             setAppCount(appsRes.data.length);
           }
-        } catch {}
+        } catch { }
       }
     } catch (err: any) {
       if (err.response?.status === 404) {

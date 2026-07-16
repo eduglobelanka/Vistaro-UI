@@ -30,7 +30,7 @@ export const messagingService = {
   },
 
   async markRead(messageId: string): Promise<ApiResponse<MessageResponseDto>> {
-    const response = await apiClient.put<ApiResponse<MessageResponseDto>>(`/api/messages/read/${messageId}`);
+    const response = await apiClient.put<ApiResponse<MessageResponseDto>>(`/api/messages/${messageId}/read`);
     return response.data;
   },
 
