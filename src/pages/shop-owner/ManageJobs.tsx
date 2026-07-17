@@ -223,25 +223,36 @@ export const ManageJobs: React.FC = () => {
     setFormDialogOpen(true);
   };
 
-  const openEditDialog = (post: JobPostingResponseDto) => {
-    setEditingPost(post);
-    reset({
-      jobTitle: post.jobTitle,
-      description: post.description,
-      jobCategory: post.jobCategory,
-      employmentType: post.employmentType,
-      contractType: post.contractType,
-      salaryType: post.salaryType,
-      salaryAmount: Number(post.salaryAmount),
-      hoursPerWeek: Number(post.hoursPerWeek),
-      location: post.location,
-      city: post.city,
-      postcode: post.postcode,
-      startDate: post.startDate,
-      expiryDate: post.expiryDate,
-      status: post.status,
-    });
-    setFormDialogOpen(true);
+  const openEditDialog = async (post: JobPostingResponseDto) => {
+    setErrorMessage(null);
+    try {
+      const response = await jobPostingService.getJobById(post.id);
+      if (response.succeeded && response.data) {
+        const job = response.data;
+        setEditingPost(job);
+        reset({
+          jobTitle: job.jobTitle,
+          description: job.description,
+          jobCategory: job.jobCategory,
+          employmentType: job.employmentType,
+          contractType: job.contractType,
+          salaryType: job.salaryType,
+          salaryAmount: Number(job.salaryAmount),
+          hoursPerWeek: Number(job.hoursPerWeek),
+          location: job.location,
+          city: job.city,
+          postcode: job.postcode,
+          startDate: job.startDate,
+          expiryDate: job.expiryDate,
+          status: job.status,
+        });
+        setFormDialogOpen(true);
+      } else {
+        setErrorMessage(response.message || 'Failed to fetch job details.');
+      }
+    } catch {
+      setErrorMessage('Failed to fetch job details from server.');
+    }
   };
 
   const onSubmitForm = async (data: JobPostingFormValues) => {
