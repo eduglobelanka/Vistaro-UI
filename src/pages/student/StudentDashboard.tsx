@@ -241,12 +241,24 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+      <Box sx={{ 
+        mb: 4, 
+        p: { xs: 3, md: 5 }, 
+        borderRadius: 4, 
+        background: 'linear-gradient(135deg, #0f2c59 0%, #0d9488 100%)',
+        color: '#ffffff',
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        flexWrap: 'wrap', 
+        gap: 2,
+        boxShadow: '0 10px 30px rgba(13, 148, 136, 0.15)'
+      }}>
         <Box>
-          <Typography variant="h4" sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 800, color: '#0f2c59', mb: 1 }}>
+          <Typography variant="h4" sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 800, mb: 1 }}>
             Student Workspace
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.85)' }}>
             Welcome back, {user?.fullName || 'Job Seeker'}. Discover flexible opportunities near your city.
           </Typography>
         </Box>
@@ -284,13 +296,13 @@ export const StudentDashboard: React.FC = () => {
               <Paper
                 component={RouterLink}
                 to="/job-applications/my"
-                sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', border: '1px solid #f1f5f9', '&:hover': { borderColor: 'primary.main', boxShadow: '0px 4px 12px rgba(15,23,42,0.05)' }, transition: 'all 0.2s' }}
+                sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', border: '1px solid #f1f5f9', borderBottom: '3px solid transparent', '&:hover': { borderColor: '#f1f5f9', borderBottomColor: 'secondary.main', boxShadow: '0px 8px 24px rgba(13, 148, 136, 0.08)' }, transition: 'all 0.2s' }}
               >
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>My Applications</Typography>
                   <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5, color: '#0f2c59' }}>{appCount}</Typography>
                 </Box>
-                <Assignment sx={{ fontSize: 32, color: 'primary.main', opacity: 0.8 }} />
+                <Assignment sx={{ fontSize: 32, color: 'secondary.main', opacity: 0.9 }} />
               </Paper>
             </Grid>
 
@@ -298,13 +310,13 @@ export const StudentDashboard: React.FC = () => {
               <Paper
                 component={RouterLink}
                 to="/messages"
-                sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', border: '1px solid #f1f5f9', '&:hover': { borderColor: 'secondary.main', boxShadow: '0px 4px 12px rgba(15,23,42,0.05)' }, transition: 'all 0.2s' }}
+                sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', border: '1px solid #f1f5f9', borderBottom: '3px solid transparent', '&:hover': { borderColor: '#f1f5f9', borderBottomColor: 'secondary.main', boxShadow: '0px 8px 24px rgba(13, 148, 136, 0.08)' }, transition: 'all 0.2s' }}
               >
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>Job Invitations</Typography>
                   <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5, color: '#0f2c59' }}>{invitationCount}</Typography>
                 </Box>
-                <ContactMail sx={{ fontSize: 32, color: 'secondary.main', opacity: 0.8 }} />
+                <ContactMail sx={{ fontSize: 32, color: 'secondary.main', opacity: 0.9 }} />
               </Paper>
             </Grid>
 
@@ -312,13 +324,13 @@ export const StudentDashboard: React.FC = () => {
               <Paper
                 component={RouterLink}
                 to="/student/profile"
-                sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', border: '1px solid #f1f5f9', '&:hover': { borderColor: 'warning.main', boxShadow: '0px 4px 12px rgba(15,23,42,0.05)' }, transition: 'all 0.2s' }}
+                sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', border: '1px solid #f1f5f9', borderBottom: '3px solid transparent', '&:hover': { borderColor: '#f1f5f9', borderBottomColor: 'secondary.main', boxShadow: '0px 8px 24px rgba(13, 148, 136, 0.08)' }, transition: 'all 0.2s' }}
               >
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600 }}>Profile Verification</Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5, color: 'warning.main' }}>100%</Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5, color: 'secondary.main' }}>100%</Typography>
                 </Box>
-                <AccountBox sx={{ fontSize: 32, color: 'warning.main', opacity: 0.8 }} />
+                <AccountBox sx={{ fontSize: 32, color: 'secondary.main', opacity: 0.9 }} />
               </Paper>
             </Grid>
           </Grid>
@@ -525,7 +537,7 @@ export const StudentDashboard: React.FC = () => {
                               <Button
                                 fullWidth
                                 variant={isApplied ? 'outlined' : 'contained'}
-                                color={isApplied ? 'success' : 'primary'}
+                                color={isApplied ? 'success' : 'secondary'}
                                 disabled={isApplied}
                                 startIcon={isApplied ? <CheckCircle /> : undefined}
                                 onClick={(e) => {
