@@ -36,6 +36,7 @@ import {
   BusinessVerificationStatus,
 } from '../../types/shop-owner';
 import useAuth from '../../hooks/useAuth';
+import { parseApiError } from '../../services/api-client';
 
 // Zod Schema matching C# validators
 const shopOwnerProfileSchema = z.object({
@@ -142,11 +143,10 @@ export const ShopOwnerProfile: React.FC = () => {
         setSuccessMessage(profile ? 'Business profile updated successfully!' : 'Business profile created successfully!');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        setErrorMessage(response.message || 'Operation failed.');
+        setErrorMessage(parseApiError({ response: { data: response } }));
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.response?.data?.errors?.join(', ') || 'Failed to save profile. Please check inputs.';
-      setErrorMessage(errorMsg);
+      setErrorMessage(parseApiError(err));
     }
   };
 
@@ -339,7 +339,7 @@ export const ShopOwnerProfile: React.FC = () => {
       </Box>
 
       {errorMessage && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3, whiteSpace: 'pre-line' }}>
           {errorMessage}
         </Alert>
       )}

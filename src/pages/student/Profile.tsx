@@ -40,6 +40,7 @@ import {
   EmploymentPreference,
 } from '../../types/student';
 import useAuth from '../../hooks/useAuth';
+import { parseApiError } from '../../services/api-client';
 
 // Zod Schema for validation
 const studentProfileSchema = z.object({
@@ -188,11 +189,10 @@ export const StudentProfile: React.FC = () => {
         setSuccessMessage(profile ? 'Profile updated successfully!' : 'Profile created successfully!');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        setErrorMessage(response.message || 'Operation failed.');
+        setErrorMessage(parseApiError({ response: { data: response } }));
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.response?.data?.errors?.join(', ') || 'Failed to save profile details. Please try again.';
-      setErrorMessage(errorMsg);
+      setErrorMessage(parseApiError(err));
     }
   };
 

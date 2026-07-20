@@ -209,7 +209,7 @@ export const DashboardLayout: React.FC = () => {
                   to={link.path}
                   onClick={() => isMobile && setMobileOpen(false)}
                   sx={{
-                    borderRadius: 2,
+                    borderRadius: '0 8px 8px 0',
                     py: 1.25,
                     px: 2,
                     color: isSelected ? '#ffffff' : 'rgba(255, 255, 255, 0.65)',
@@ -311,7 +311,7 @@ export const DashboardLayout: React.FC = () => {
                 color: '#0f172a',
               }}
             >
-              Vistro Workspace
+              Vistaro Workspace
             </Typography>
           </Box>
 
@@ -484,6 +484,7 @@ export const DashboardLayout: React.FC = () => {
                   boxSizing: 'border-box',
                   width: DRAWER_WIDTH,
                   borderRight: 'none',
+                  borderRadius: 0,
                 },
               }}
             >
@@ -499,6 +500,7 @@ export const DashboardLayout: React.FC = () => {
                   boxSizing: 'border-box',
                   width: DRAWER_WIDTH,
                   borderRight: 'none',
+                  borderRadius: 0,
                 },
               }}
               open

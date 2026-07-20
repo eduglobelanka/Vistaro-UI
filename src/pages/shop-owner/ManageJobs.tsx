@@ -62,6 +62,7 @@ import {
   JobApplicationStatus,
 } from '../../types/jobs';
 import { BusinessVerificationStatus } from '../../types/shop-owner';
+import { parseApiError } from '../../services/api-client';
 
 // Zod validation matching backend requirements
 const jobPostingSchema = z.object({
@@ -271,10 +272,10 @@ export const ManageJobs: React.FC = () => {
         setFormDialogOpen(false);
         fetchData();
       } else {
-        setErrorMessage(response.message || 'Operation failed.');
+        setErrorMessage(parseApiError({ response: { data: response } }));
       }
     } catch (err: any) {
-      setErrorMessage(err.response?.data?.message || 'Error occurred while saving job post.');
+      setErrorMessage(parseApiError(err));
     }
   };
 

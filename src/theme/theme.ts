@@ -4,19 +4,19 @@ export const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#1b4a8f', // Dark sky blue from Vistro logo
+      main: '#1b4a8f', // Dark sky blue from Vistaro logo
       light: '#356899',
       dark: '#0f2c59', // Deep navy blue
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#0d9488', // Teal from Vistro logo
+      main: '#0d9488', // Teal from Vistaro logo
       light: '#3db5a0', // Turquoise
       dark: '#0f766e',
       contrastText: '#ffffff',
     },
     warning: {
-      main: '#d97706', // Gold / Amber matching the star in Vistro logo
+      main: '#d97706', // Gold / Amber matching the star in Vistaro logo
       light: '#f59e0b',
       dark: '#b45309',
     },
@@ -130,6 +130,13 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
+        },
+      },
+    },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 0,
         },
       },
     },

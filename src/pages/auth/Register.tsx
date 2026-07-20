@@ -143,7 +143,7 @@ export const Register: React.FC = () => {
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               {/* Custom Role Selector Cards */}
               <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-                I want to join Vistro as a:
+                I want to join Vistaro as a:
               </Typography>
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid size={{ xs: 6 }}>

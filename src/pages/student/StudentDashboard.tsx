@@ -44,6 +44,7 @@ import jobSearchService from '../../services/job-search.service';
 import useAuth from '../../hooks/useAuth';
 import type { JobSearchResultDto, JobSearchRequestDto } from '../../types/jobs';
 import { EmploymentType, ContractType, SalaryType } from '../../types/jobs';
+import { parseApiError } from '../../services/api-client';
 
 export const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -202,10 +203,10 @@ export const StudentDashboard: React.FC = () => {
         setApplyDialogOpen(false);
         setCoverMessage('');
       } else {
-        setErrorMessage(response.message || 'Failed to submit application.');
+        setErrorMessage(parseApiError({ response: { data: response } }));
       }
     } catch (err: any) {
-      setErrorMessage(err.response?.data?.message || 'Failed to apply.');
+      setErrorMessage(parseApiError(err));
     } finally {
       setApplying(false);
     }

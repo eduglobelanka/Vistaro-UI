@@ -43,6 +43,7 @@ import type {
 } from '../../types/admin';
 import { BusinessVerificationStatus, DocumentVerificationStatus } from '../../types/admin';
 import { JobPostingStatus } from '../../types/jobs';
+import { parseApiError } from '../../services/api-client';
 
 export const UserManager: React.FC = () => {
   const [currentTab, setCurrentTab] = useState(0);
@@ -148,7 +149,7 @@ export const UserManager: React.FC = () => {
         setUsers(prev => prev.map(u => u.id === user.id ? { ...u, isActive: !user.isActive } : u));
       }
     } catch (err: any) {
-      setErrorMessage(err.response?.data?.message || 'Failed to update user status.');
+      setErrorMessage(parseApiError(err));
     }
   };
 

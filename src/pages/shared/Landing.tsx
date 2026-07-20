@@ -210,6 +210,10 @@ export const Landing: React.FC = () => {
     navigate('/login');
   };
 
+  useEffect(() => {
+    document.title = 'Vistaro — Local UK Job Matching Platform | vistaro.co.uk';
+  }, []);
+
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: '#f8fafc' }}>
       
@@ -219,12 +223,10 @@ export const Landing: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box
               component="img"
-              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=80&auto=format&fit=crop"
-              sx={{ width: 32, height: 32, borderRadius: '50%' }}
+              src="/logo.jpeg"
+              alt="Vistaro — vistaro.co.uk"
+              sx={{ height: 36, width: 'auto' }}
             />
-            <Typography variant="h5" sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 900, color: '#0f2c59', letterSpacing: -0.5 }}>
-              Vistro
-            </Typography>
           </Box>
 
           <Stack direction="row" spacing={1.5}>
@@ -273,11 +275,11 @@ export const Landing: React.FC = () => {
         textAlign: 'center',
       }}>
         <Container maxWidth="md">
-          <Typography variant="h2" sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 900, mb: 2, letterSpacing: -1 }}>
-            Find Your Next UK Job
+          <Typography component="h1" variant="h2" sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 900, mb: 2, letterSpacing: -1 }}>
+            Vistaro — UK Local Job Matching Platform
           </Typography>
           <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.85)', mb: 5, fontWeight: 500 }}>
-            Discover flexible, student-friendly part-time work near you. No account required to browse.
+            Connecting university students &amp; verified local employers across the UK on <strong>vistaro.co.uk</strong>.
           </Typography>
 
           {/* HERO SEARCH BAR */}
@@ -415,11 +417,46 @@ export const Landing: React.FC = () => {
         )}
       </Container>
 
+      {/* SEO INFORMATION & KEYWORD SECTION FOR SEARCH ENGINES */}
+      <Box sx={{ py: 6, bgcolor: '#ffffff', borderTop: '1px solid #e2e8f0' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="h5" component="h2" sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 800, color: '#0f2c59', mb: 2 }}>
+                About Vistaro (vistaro.co.uk)
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, mb: 2 }}>
+                <strong>Vistaro</strong> (<a href="https://vistaro.co.uk" style={{ color: '#0d9488', textDecoration: 'none', fontWeight: 600 }}>vistaro.co.uk</a>) is the premier UK job-matching platform designed specifically to connect university students with local verified employers for part-time, flexible, and seasonal employment.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                All recruitment activity passes through Vistaro Admin moderation to ensure candidate privacy, fair wages, and genuine job postings across London, Manchester, Birmingham, Leeds, Edinburgh, and all UK university towns.
+              </Typography>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Typography variant="h5" component="h2" sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 800, color: '#0f2c59', mb: 2 }}>
+                UK Student Employment &amp; Hiring
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, mb: 2 }}>
+                Whether you are a university student searching for part-time barista, retail, or customer service shifts, or a local shop owner looking to hire reliable student talent, <strong>Vistaro</strong> provides an end-to-end recruitment workspace.
+              </Typography>
+              <Stack direction="row" spacing={1} useFlexGap sx={{ mt: 1, flexWrap: 'wrap' }}>
+                <Chip label="Part-Time Student Jobs UK" size="small" variant="outlined" />
+                <Chip label="London Student Recruitment" size="small" variant="outlined" />
+                <Chip label="Verified UK Shop Owners" size="small" variant="outlined" />
+                <Chip label="vistaro.co.uk" size="small" color="secondary" />
+              </Stack>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
       {/* FOOTER */}
-      <Box sx={{ py: 4, bgcolor: '#ffffff', borderTop: '1px solid #e2e8f0', mt: 'auto', textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary">
-          © {new Date().getFullYear()} Vistro UK Job Finder platform. Designed for student employment matching.
-        </Typography>
+      <Box sx={{ py: 4, bgcolor: '#0f2c59', color: '#ffffff', textAlign: 'center' }}>
+        <Container maxWidth="lg">
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+            © {new Date().getFullYear()} <strong>Vistaro</strong> (<a href="https://vistaro.co.uk" style={{ color: '#3db5a0', textDecoration: 'none' }}>vistaro.co.uk</a>). See Opportunity. Build Futures. All rights reserved.
+          </Typography>
+        </Container>
       </Box>
 
       {/* AUTH PROMPT DIALOG */}

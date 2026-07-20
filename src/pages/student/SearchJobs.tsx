@@ -41,6 +41,7 @@ import {
   ContractType,
   SalaryType,
 } from '../../types/jobs';
+import { parseApiError } from '../../services/api-client';
 
 export const SearchJobs: React.FC = () => {
   const [items, setItems] = useState<JobSearchResultDto[]>([]);
@@ -164,10 +165,10 @@ export const SearchJobs: React.FC = () => {
         setApplyDialogOpen(false);
         setCoverMessage('');
       } else {
-        setErrorMessage(response.message || 'Failed to submit application.');
+        setErrorMessage(parseApiError({ response: { data: response } }));
       }
     } catch (err: any) {
-      setErrorMessage(err.response?.data?.message || 'Failed to apply. Make sure your student profile is created.');
+      setErrorMessage(parseApiError(err));
     } finally {
       setApplying(false);
     }

@@ -37,6 +37,7 @@ import type {
 import {
   DocumentVerificationStatus,
 } from '../../types/shop-owner';
+import { parseApiError } from '../../services/api-client';
 
 export const Documents: React.FC = () => {
   const [documents, setDocuments] = useState<BusinessDocumentResponseDto[]>([]);
@@ -95,11 +96,10 @@ export const Documents: React.FC = () => {
         setDocuments((prev) => [response.data!, ...prev]);
         if (fileInputRef.current) fileInputRef.current.value = '';
       } else {
-        setErrorMessage(response.message || 'Failed to upload document.');
+        setErrorMessage(parseApiError({ response: { data: response } }));
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || err.response?.data?.errors?.join(', ') || 'Failed to upload document. Ensure profile is created first.';
-      setErrorMessage(errorMsg);
+      setErrorMessage(parseApiError(err));
     } finally {
       setUploading(false);
     }
@@ -126,8 +126,7 @@ export const Documents: React.FC = () => {
         setDocuments((prev) => prev.filter((doc) => doc.id !== selectedDocId));
       }
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Failed to delete the document.';
-      setErrorMessage(errorMsg);
+      setErrorMessage(parseApiError(err));
     } finally {
       closeDeleteDialog();
     }

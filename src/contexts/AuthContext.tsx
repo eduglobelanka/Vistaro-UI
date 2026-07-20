@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import authService from '../services/auth.service';
+import { parseApiError } from '../services/api-client';
 import type { LoginRequest, RegisterRequest, UserSummary } from '../types/auth';
 
 interface AuthContextType {
@@ -84,8 +85,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
     } catch (err: any) {
-      const errMsg = err.response?.data?.message || 'Login failed. Please check your credentials.';
-      setError(errMsg);
+      setError(parseApiError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -102,8 +102,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('user', JSON.stringify(response.user));
       setUser(response.user);
     } catch (err: any) {
-      const errMsg = err.response?.data?.message || err.response?.data?.errors?.join(', ') || 'Registration failed.';
-      setError(errMsg);
+      setError(parseApiError(err));
       throw err;
     } finally {
       setLoading(false);

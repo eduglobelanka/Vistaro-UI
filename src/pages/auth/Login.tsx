@@ -117,7 +117,7 @@ export const Login: React.FC = () => {
               Welcome Back
             </Typography>
             <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 4 }}>
-              Enter your credentials to access your Vistro account
+              Enter your credentials to access your Vistaro account
             </Typography>
 
             {apiError && (

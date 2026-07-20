@@ -39,6 +39,7 @@ import messagingService from '../../services/messaging.service';
 import studentService from '../../services/student.service';
 import type { MessageResponseDto } from '../../types/messaging';
 import { MessageType, InvitationStatus } from '../../types/messaging';
+import { parseApiError } from '../../services/api-client';
 
 interface ConversationItem {
   id: string;
@@ -280,7 +281,7 @@ export const Inbox: React.FC = () => {
         fetchInbox();
       }
     } catch (err: any) {
-      setErrorMessage(err.response?.data?.message || 'Failed to send message.');
+      setErrorMessage(parseApiError(err));
     } finally {
       setSendingMessage(false);
     }

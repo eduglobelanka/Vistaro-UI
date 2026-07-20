@@ -126,40 +126,48 @@ apiClient.interceptors.response.use(
 
 export const parseApiError = (err: any): string => {
   if (!err) return 'An unexpected error occurred.';
-  
+
   const responseData = err.response?.data;
   if (!responseData) {
     return err.message || 'Unable to connect to the server.';
   }
 
-  // Case 1: Custom API response with "message" field
-  if (typeof responseData.message === 'string') {
-    return responseData.message;
+  // Case 1: Vistaro envelope — Errors[] array (PascalCase) takes priority
+  // e.g. { Succeeded: false, Message: "Validation failed.", Errors: ["Postcode must be a valid UK postcode."] }
+  const errorsArray = responseData.Errors ?? responseData.errors;
+  if (Array.isArray(errorsArray) && errorsArray.length > 0) {
+    return errorsArray.join('\n');
   }
 
-  // Case 2: ASP.NET Core validation errors dictionary
-  if (responseData.errors && typeof responseData.errors === 'object') {
+  // Case 2: Vistaro envelope — Message string (PascalCase or camelCase)
+  const messageStr = responseData.Message ?? responseData.message;
+  if (typeof messageStr === 'string' && messageStr) {
+    return messageStr;
+  }
+
+  // Case 3: ASP.NET Core validation ProblemDetails — errors object
+  const aspErrors = responseData.errors ?? responseData.Errors;
+  if (aspErrors && typeof aspErrors === 'object' && !Array.isArray(aspErrors)) {
     const errorMessages: string[] = [];
-    Object.entries(responseData.errors).forEach(([field, messages]) => {
-      // If key is like "$.studentProfileId", make it friendly
+    Object.entries(aspErrors).forEach(([field, messages]) => {
       const cleanField = field.startsWith('$.') ? field.slice(2) : field;
       if (Array.isArray(messages)) {
-        errorMessages.push(`${cleanField}: ${messages.join(', ')}`);
+        errorMessages.push(`${cleanField}: ${(messages as string[]).join(', ')}`);
       } else if (typeof messages === 'string') {
         errorMessages.push(`${cleanField}: ${messages}`);
       }
     });
     if (errorMessages.length > 0) {
-      return errorMessages.join(' | ');
+      return errorMessages.join('\n');
     }
   }
 
-  // Case 3: Problem details with "title" field
-  if (typeof responseData.title === 'string') {
-    return responseData.title;
-  }
+  // Case 4: ProblemDetails title
+  const title = responseData.title ?? responseData.Title;
+  if (typeof title === 'string') return title;
 
   return 'An unexpected error occurred on the server.';
 };
 
 export default apiClient;
+
