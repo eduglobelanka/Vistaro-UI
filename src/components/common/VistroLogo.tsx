@@ -20,7 +20,7 @@ export const VistroLogo: React.FC<VistroLogoProps> = ({
     return (
       <Box
         component="img"
-        src="/logo.jpeg"
+        src="/logo.png"
         alt="Vistaro"
         sx={{ height: iconSize, width: 'auto', objectFit: 'contain' }}
       />
@@ -29,39 +29,12 @@ export const VistroLogo: React.FC<VistroLogoProps> = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      {/* 
-        Use logo.jpeg for light backgrounds.
-        For dark sidebar (light-text variant), show a white-framed version 
-        by placing the image inside a slightly opaque white pill — 
-        this avoids the destructive invert filter that turns the logo white.
-      */}
-      {isLightText ? (
-        <Box
-          sx={{
-            backgroundColor: 'rgba(255,255,255,0.92)',
-            borderRadius: '10px',
-            px: 1.5,
-            py: 0.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Box
-            component="img"
-            src="/logo.jpeg"
-            alt="Vistaro"
-            sx={{ height: iconSize * 0.9, width: 'auto', objectFit: 'contain', display: 'block' }}
-          />
-        </Box>
-      ) : (
-        <Box
-          component="img"
-          src="/logo.jpeg"
-          alt="Vistaro"
-          sx={{ height: iconSize * 1.2, width: 'auto', objectFit: 'contain' }}
-        />
-      )}
+      <Box
+        component="img"
+        src="/logo.png"
+        alt="Vistaro"
+        sx={{ height: isLightText ? iconSize * 0.9 : iconSize * 1.2, width: 'auto', objectFit: 'contain' }}
+      />
 
       {tagline && (
         <Typography

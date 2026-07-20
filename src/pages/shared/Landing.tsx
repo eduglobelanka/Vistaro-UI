@@ -223,7 +223,7 @@ export const Landing: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Box
               component="img"
-              src="/logo.jpeg"
+              src="/logo.png"
               alt="Vistaro — vistaro.co.uk"
               sx={{ height: 36, width: 'auto' }}
             />
