@@ -198,7 +198,11 @@ export const Inbox: React.FC = () => {
       const otherUserId = latestMsg.senderUserId === user?.id ? latestMsg.receiverUserId : latestMsg.senderUserId;
       const otherProfileId = isStudent ? latestMsg.shopOwnerProfileId : latestMsg.studentProfileId;
       const otherName = isStudent ? latestMsg.shopName : latestMsg.studentFullName;
-      const unreadCount = thread.filter((m) => m.receiverUserId === user?.id && !m.isRead).length;
+      const rawUnread = thread.filter((m) => m.receiverUserId === user?.id && !m.isRead).length;
+      
+      // If conversation is active or currently open, clear unread count
+      const isActive = activeUser?.jobApplicationId === key;
+      const unreadCount = isActive ? 0 : rawUnread;
 
       return {
         id: key, // jobApplicationId
@@ -227,12 +231,14 @@ export const Inbox: React.FC = () => {
 
         // Mark received messages for this application as read
         const unread = filtered.filter((m) => m.receiverUserId === user?.id && !m.isRead);
-        for (const msg of unread) {
-          try {
-            await messagingService.markRead(msg.id);
-          } catch {
-            // Quiet fail
-          }
+        if (unread.length > 0) {
+          // Immediately update local unreadCount in conversations list
+          setConversations((prev) =>
+            prev.map((c) => (c.jobApplicationId === targetJobApplicationId ? { ...c, unreadCount: 0 } : c))
+          );
+
+          // Mark read on backend in parallel
+          Promise.all(unread.map((msg) => messagingService.markRead(msg.id).catch(() => {})));
         }
       }
     } catch {
@@ -251,6 +257,12 @@ export const Inbox: React.FC = () => {
       jobTitle: item.jobTitle,
     };
     setActiveUser(activeObj);
+
+    // Immediately clear unread badge on click
+    setConversations((prev) =>
+      prev.map((c) => (c.jobApplicationId === item.jobApplicationId ? { ...c, unreadCount: 0 } : c))
+    );
+
     fetchChatLog(item.otherUserId, item.jobApplicationId, true);
     setMobileShowChat(true);
   };
