@@ -24,6 +24,7 @@ import {
   Alert,
   CircularProgress,
   Stack,
+  Snackbar,
 } from '@mui/material';
 import {
   Check,
@@ -356,8 +357,7 @@ export const UserManager: React.FC = () => {
         </IconButton>
       </Box>
 
-      {successMessage && <Alert severity="success" onClose={() => setSuccessMessage(null)} sx={{ mb: 3 }}>{successMessage}</Alert>}
-      {errorMessage && <Alert severity="error" onClose={() => setErrorMessage(null)} sx={{ mb: 3 }}>{errorMessage}</Alert>}
+
 
       <Paper sx={{ mb: 3 }}>
         <Tabs value={currentTab} onChange={handleTabChange} indicatorColor="primary" textColor="primary" variant="fullWidth">
@@ -708,6 +708,28 @@ export const UserManager: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMessage(null)} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
