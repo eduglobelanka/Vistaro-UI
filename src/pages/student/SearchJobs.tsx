@@ -20,6 +20,7 @@ import {
   DialogContent,
   DialogActions,
   Pagination,
+  Snackbar,
 } from '@mui/material';
 import {
   Search,
@@ -210,12 +211,6 @@ export const SearchJobs: React.FC = () => {
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setErrorMessage(null)}>
           {errorMessage}
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage(null)}>
-          {successMessage}
         </Alert>
       )}
 
@@ -554,6 +549,17 @@ export const SearchJobs: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMessage(null)} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

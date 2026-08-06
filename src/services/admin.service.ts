@@ -91,6 +91,13 @@ export const adminService = {
     return response.data;
   },
 
+  async downloadBusinessDocument(id: string): Promise<Blob> {
+    const response = await apiClient.get<Blob>(`/api/admin/business-documents/${id}/download`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+
   async getJobPostings(query: AdminQueryDto): Promise<ApiResponse<AdminPagedResponseDto<AdminJobPostingResponseDto>>> {
     const qs = buildQueryString(query);
     const response = await apiClient.get<ApiResponse<AdminPagedResponseDto<AdminJobPostingResponseDto>>>(`/api/admin/job-postings?${qs}`);

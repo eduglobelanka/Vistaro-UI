@@ -43,6 +43,7 @@ import {
   LockOpen,
   ListAlt,
   Refresh,
+  Download,
 } from '@mui/icons-material';
 import adminService from '../../services/admin.service';
 import adminRecruitmentApi from '../../services/adminRecruitmentApi';
@@ -242,6 +243,22 @@ export const AdminDashboard: React.FC = () => {
   };
 
   // --- Action Handlers ---
+  const handleDownloadDocument = async (id: string, originalFileName: string) => {
+    try {
+      const blob = await adminService.downloadBusinessDocument(id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', originalFileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setErrorMessage('Failed to download business document.');
+    }
+  };
+
   const handleApproveDocument = async (id: string) => {
     try {
       const res = await adminService.approveBusinessDocument(id);
@@ -692,6 +709,15 @@ export const AdminDashboard: React.FC = () => {
                         <TableCell>{new Date(doc.uploadedAt).toLocaleDateString()}</TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                              startIcon={<Download />}
+                              onClick={() => handleDownloadDocument(doc.id, doc.originalFileName)}
+                            >
+                              Download
+                            </Button>
                             <Button
                               size="small"
                               variant="contained"

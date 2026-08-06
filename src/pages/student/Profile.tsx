@@ -21,6 +21,7 @@ import {
   Stack,
   Avatar,
   Card,
+  Snackbar,
 } from '@mui/material';
 import {
   School,
@@ -143,7 +144,7 @@ export const StudentProfile: React.FC = () => {
           visaType: response.data.visaType,
           employmentPreference: response.data.employmentPreference,
           rightToWorkShareCode: '',
-          dateOfBirth: response.data.dateOfBirth,
+          dateOfBirth: response.data.dateOfBirth ? response.data.dateOfBirth.substring(0, 10) : '',
           maxHoursPerWeek: response.data.maxHoursPerWeek,
           consentToShareProfile: response.data.consentToShareProfile,
           isAvailableForWork: response.data.isAvailableForWork,
@@ -230,11 +231,6 @@ export const StudentProfile: React.FC = () => {
     const userInitials = profile.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     return (
       <Box sx={{ maxWidth: 800, mx: 'auto', width: '100%' }}>
-        {successMessage && (
-          <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage(null)}>
-            {successMessage}
-          </Alert>
-        )}
 
         <Paper sx={{ p: 4, mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 3 }}>
@@ -438,6 +434,28 @@ export const StudentProfile: React.FC = () => {
             </Stack>
           </Box>
         </Paper>
+
+        <Snackbar
+          open={Boolean(successMessage)}
+          autoHideDuration={6000}
+          onClose={() => setSuccessMessage(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={() => setSuccessMessage(null)} severity="success" sx={{ width: '100%' }}>
+            {successMessage}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar
+          open={Boolean(errorMessage)}
+          autoHideDuration={6000}
+          onClose={() => setErrorMessage(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+            {errorMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     );
   }
@@ -459,11 +477,6 @@ export const StudentProfile: React.FC = () => {
         </Typography>
       </Box>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {errorMessage}
-        </Alert>
-      )}
 
       {selectedVisaType === VisaType.StudentVisa && maxHours > 20 && (
         <Alert severity="warning" icon={<Info />} sx={{ mb: 3 }}>
@@ -510,12 +523,41 @@ export const StudentProfile: React.FC = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
+                type="date"
                 label="Date of Birth"
-                placeholder="YYYY-MM-DD"
                 {...register('dateOfBirth')}
                 error={!!errors.dateOfBirth}
-                helperText={errors.dateOfBirth?.message || 'Format: YYYY-MM-DD'}
-                sx={{ mb: 2 }}
+                helperText={errors.dateOfBirth?.message || 'Select your date of birth'}
+                slotProps={{
+                  inputLabel: { shrink: true },
+                  htmlInput: {
+                    onClick: (e: any) => {
+                      try {
+                        e.target.showPicker();
+                      } catch (err) {}
+                    },
+                    onFocus: (e: any) => {
+                      try {
+                        e.target.showPicker();
+                      } catch (err) {}
+                    }
+                  }
+                }}
+                sx={{
+                  mb: 2,
+                  '& input[type="date"]': {
+                    position: 'relative',
+                  },
+                  '& input[type="date"]::-webkit-calendar-picker-indicator': {
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
+                    cursor: 'pointer',
+                  }
+                }}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
@@ -705,6 +747,28 @@ export const StudentProfile: React.FC = () => {
           </Button>
         </Stack>
       </form>
+
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMessage(null)} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={Boolean(errorMessage)}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

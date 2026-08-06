@@ -33,6 +33,7 @@ import {
   CheckCircle,
   Search,
   Refresh,
+  Download,
 } from '@mui/icons-material';
 import adminService from '../../services/admin.service';
 import type {
@@ -197,6 +198,22 @@ export const UserManager: React.FC = () => {
   };
 
   // --- Tab 2: Document verifications ---
+  const handleDownloadDocument = async (id: string, originalFileName: string) => {
+    try {
+      const blob = await adminService.downloadBusinessDocument(id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', originalFileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setErrorMessage('Failed to download business document.');
+    }
+  };
+
   const handleApproveDocument = async (id: string) => {
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -526,6 +543,15 @@ export const UserManager: React.FC = () => {
                         </TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="primary"
+                              startIcon={<Download />}
+                              onClick={() => handleDownloadDocument(d.id, d.originalFileName)}
+                            >
+                              Download
+                            </Button>
                             <Button
                               size="small"
                               variant="contained"

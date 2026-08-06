@@ -20,6 +20,7 @@ import {
   DialogContent,
   DialogActions,
   DialogContentText,
+  Snackbar,
 } from '@mui/material';
 import {
   CloudUpload,
@@ -192,17 +193,6 @@ export const Documents: React.FC = () => {
         </Typography>
       </Box>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setErrorMessage(null)}>
-          {errorMessage}
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage(null)}>
-          {successMessage}
-        </Alert>
-      )}
 
       <Grid container spacing={3}>
         {/* Upload Card */}
@@ -360,6 +350,28 @@ export const Documents: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMessage(null)} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={Boolean(errorMessage)}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

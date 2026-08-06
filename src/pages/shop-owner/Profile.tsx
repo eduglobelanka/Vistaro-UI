@@ -17,6 +17,7 @@ import {
   Paper,
   Stack,
   Avatar,
+  Snackbar,
 } from '@mui/material';
 import {
   Store,
@@ -195,11 +196,6 @@ export const ShopOwnerProfile: React.FC = () => {
   if (profile && !isEditMode) {
     return (
       <Box sx={{ maxWidth: 800, mx: 'auto', width: '100%' }}>
-        {successMessage && (
-          <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccessMessage(null)}>
-            {successMessage}
-          </Alert>
-        )}
 
         <Paper sx={{ p: 4, mb: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2, mb: 3 }}>
@@ -317,6 +313,28 @@ export const ShopOwnerProfile: React.FC = () => {
             {getVerificationChip(profile.businessVerificationStatus)}
           </Stack>
         </Paper>
+
+        <Snackbar
+          open={Boolean(successMessage)}
+          autoHideDuration={6000}
+          onClose={() => setSuccessMessage(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={() => setSuccessMessage(null)} severity="success" sx={{ width: '100%' }}>
+            {successMessage}
+          </Alert>
+        </Snackbar>
+
+        <Snackbar
+          open={Boolean(errorMessage)}
+          autoHideDuration={6000}
+          onClose={() => setErrorMessage(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+            {errorMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     );
   }
@@ -338,11 +356,6 @@ export const ShopOwnerProfile: React.FC = () => {
         </Typography>
       </Box>
 
-      {errorMessage && (
-        <Alert severity="error" sx={{ mb: 3, whiteSpace: 'pre-line' }}>
-          {errorMessage}
-        </Alert>
-      )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <Paper sx={{ p: { xs: 3, md: 4 }, mb: 4 }}>
@@ -491,6 +504,28 @@ export const ShopOwnerProfile: React.FC = () => {
           </Button>
         </Stack>
       </form>
+
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMessage(null)} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={Boolean(errorMessage)}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setErrorMessage(null)} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
