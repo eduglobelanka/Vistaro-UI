@@ -25,6 +25,9 @@ import {
   CircularProgress,
   Stack,
   Snackbar,
+  Avatar,
+  Grid,
+  Divider,
 } from '@mui/material';
 import {
   Check,
@@ -44,6 +47,8 @@ import type {
   AdminJobPostingResponseDto,
 } from '../../types/admin';
 import { BusinessVerificationStatus, DocumentVerificationStatus } from '../../types/admin';
+import type { StudentProfileResponseDto } from '../../types/student';
+import { VisaType, EmploymentPreference } from '../../types/student';
 import { JobPostingStatus } from '../../types/jobs';
 import { parseApiError } from '../../services/api-client';
 
@@ -76,6 +81,31 @@ export const UserManager: React.FC = () => {
   const [targetId, setTargetId] = useState<string | null>(null);
   const [adminComment, setAdminComment] = useState('');
   const [submittingReject, setSubmittingReject] = useState(false);
+
+  // Profile view states
+  const [profileViewOpen, setProfileViewOpen] = useState(false);
+  const [viewedStudentProfile, setViewedStudentProfile] = useState<StudentProfileResponseDto | null>(null);
+  const [viewedShopOwnerProfile, setViewedShopOwnerProfile] = useState<AdminShopOwnerResponseDto | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  const getVisaTypeLabel = (visa: VisaType) => {
+    switch (visa) {
+      case 1: return 'Student Visa';
+      case 2: return 'Graduate Visa';
+      case 3: return 'Other Visa';
+      case 4: return 'Needs RTW Verification';
+      case 5: return 'Prefer Not to Say';
+      default: return 'Unknown';
+    }
+  };
+
+  const getEmploymentPreferenceLabel = (pref: EmploymentPreference) => {
+    switch (pref) {
+      case 1: return 'Part-Time';
+      case 2: return 'Full-Time';
+      default: return 'Unknown';
+    }
+  };
 
   useEffect(() => {
     setPage(1);
@@ -196,6 +226,57 @@ export const UserManager: React.FC = () => {
     setTargetId(id);
     setAdminComment('');
     setRejectOpen(true);
+  };
+
+  // --- Profile View Handler ---
+  const handleViewProfile = async (userOrOwner: any, type: 'user' | 'owner') => {
+    setLoadingProfile(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setViewedStudentProfile(null);
+    setViewedShopOwnerProfile(null);
+    setProfileViewOpen(true);
+
+    try {
+      if (type === 'owner') {
+        const res = await adminService.getShopOwner(userOrOwner.id);
+        if (res.succeeded && res.data) {
+          setViewedShopOwnerProfile(res.data);
+        } else {
+          setErrorMessage(res.message || 'Failed to load shop owner profile.');
+          setProfileViewOpen(false);
+        }
+      } else {
+        const isStudent = userOrOwner.roles.includes('Student');
+        const isShopOwner = userOrOwner.roles.includes('ShopOwner');
+
+        if (isStudent) {
+          const res = await adminService.getStudentProfileByUserId(userOrOwner.id);
+          if (res.succeeded && res.data) {
+            setViewedStudentProfile(res.data);
+          } else {
+            setErrorMessage(res.message || 'Failed to load student profile.');
+            setProfileViewOpen(false);
+          }
+        } else if (isShopOwner) {
+          const res = await adminService.getShopOwnerProfileByUserId(userOrOwner.id);
+          if (res.succeeded && res.data) {
+            setViewedShopOwnerProfile(res.data);
+          } else {
+            setErrorMessage(res.message || 'Failed to load shop owner profile.');
+            setProfileViewOpen(false);
+          }
+        } else {
+          setErrorMessage('System Admin users do not have a student or shop owner profile.');
+          setProfileViewOpen(false);
+        }
+      }
+    } catch {
+      setErrorMessage('Failed to load profile details.');
+      setProfileViewOpen(false);
+    } finally {
+      setLoadingProfile(false);
+    }
   };
 
   // --- Tab 2: Document verifications ---
@@ -424,6 +505,16 @@ export const UserManager: React.FC = () => {
                         <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                            {(u.roles.includes('Student') || u.roles.includes('ShopOwner')) && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="info"
+                                onClick={() => handleViewProfile(u, 'user')}
+                              >
+                                View Profile
+                              </Button>
+                            )}
                             <Button
                               size="small"
                               variant="outlined"
@@ -479,6 +570,14 @@ export const UserManager: React.FC = () => {
                         <TableCell>{new Date(o.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="info"
+                              onClick={() => handleViewProfile(o, 'owner')}
+                            >
+                              View Profile
+                            </Button>
                             <Button
                               size="small"
                               variant="contained"
@@ -705,6 +804,178 @@ export const UserManager: React.FC = () => {
             sx={{ fontWeight: 700 }}
           >
             {submittingReject ? 'Submitting...' : 'Confirm Reject'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Profile Details Dialog */}
+      <Dialog open={profileViewOpen} onClose={() => setProfileViewOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontFamily: '"Outfit", sans-serif', fontWeight: 700, borderBottom: '1px solid #e2e8f0', pb: 2 }}>
+          {viewedStudentProfile ? 'Student Profile Detail' : viewedShopOwnerProfile ? 'Shop Owner Profile Detail' : 'Loading Profile...'}
+        </DialogTitle>
+        <DialogContent sx={{ p: 3 }}>
+          {loadingProfile ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress size={40} />
+            </Box>
+          ) : viewedStudentProfile ? (
+            <Box sx={{ pt: 1 }}>
+              <Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: 'center' }}>
+                <Avatar sx={{ width: 64, height: 64, bgcolor: '#3b82f6', fontSize: '1.5rem', fontWeight: 700 }}>
+                  {viewedStudentProfile.fullName.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
+                    {viewedStudentProfile.fullName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Student Candidate
+                  </Typography>
+                  <Chip
+                    label={viewedStudentProfile.isAvailableForWork ? 'Available for Work' : 'Not Available'}
+                    color={viewedStudentProfile.isAvailableForWork ? 'success' : 'default'}
+                    size="small"
+                    sx={{ mt: 0.5, fontWeight: 600 }}
+                  />
+                </Box>
+              </Stack>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Email Address</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedStudentProfile.email || '—'}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Phone Number</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedStudentProfile.phoneNumber || '—'}</Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Divider sx={{ my: 1 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>University</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedStudentProfile.universityName || '—'}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Location</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{`${viewedStudentProfile.city}, ${viewedStudentProfile.postcode}`}</Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Divider sx={{ my: 1 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Visa Type</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {getVisaTypeLabel(viewedStudentProfile.visaType)}
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Date of Birth</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedStudentProfile.dateOfBirth || '—'}</Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Divider sx={{ my: 1 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Employment Preference</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {getEmploymentPreferenceLabel(viewedStudentProfile.employmentPreference)}
+                  </Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Max Hours / Week</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedStudentProfile.maxHoursPerWeek} hrs</Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Preferred Categories</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedStudentProfile.preferredJobCategories || 'Any / All'}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Expected Hourly Rate</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {viewedStudentProfile.expectedHourlyRate ? `£${viewedStudentProfile.expectedHourlyRate.toFixed(2)}/hr` : '—'}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          ) : viewedShopOwnerProfile ? (
+            <Box sx={{ pt: 1 }}>
+              <Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: 'center' }}>
+                <Avatar sx={{ width: 64, height: 64, bgcolor: '#10b981', fontSize: '1.5rem', fontWeight: 700 }}>
+                  {viewedShopOwnerProfile.shopName.charAt(0).toUpperCase()}
+                </Avatar>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#1e293b' }}>
+                    {viewedShopOwnerProfile.shopName}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {`Owner: ${viewedShopOwnerProfile.fullName}`}
+                  </Typography>
+                  <Chip
+                    label={viewedShopOwnerProfile.businessVerificationStatus === 1 ? 'Approved' : viewedShopOwnerProfile.businessVerificationStatus === 2 ? 'Rejected' : 'Pending Verification'}
+                    color={viewedShopOwnerProfile.businessVerificationStatus === 1 ? 'success' : viewedShopOwnerProfile.businessVerificationStatus === 2 ? 'error' : 'warning'}
+                    size="small"
+                    sx={{ mt: 0.5, fontWeight: 600 }}
+                  />
+                </Box>
+              </Stack>
+
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Email Address</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedShopOwnerProfile.email || '—'}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Phone Number</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedShopOwnerProfile.phoneNumber || '—'}</Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Divider sx={{ my: 1 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Business Type</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedShopOwnerProfile.businessType || '—'}</Typography>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>City / Postcode</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{`${viewedShopOwnerProfile.city}, ${viewedShopOwnerProfile.postcode}`}</Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Divider sx={{ my: 1 }} />
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600 }}>Shop Address</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>{viewedShopOwnerProfile.city} area</Typography>
+                </Grid>
+
+                {viewedShopOwnerProfile.adminComment && (
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="caption" color="error" sx={{ display: 'block', fontWeight: 600 }}>Admin Feedback Comment</Typography>
+                    <Typography variant="body2" color="error" sx={{ fontWeight: 500 }}>{viewedShopOwnerProfile.adminComment}</Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>
+              No profile loaded or user is not a Student/ShopOwner.
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={() => setProfileViewOpen(false)} variant="contained" color="primary" sx={{ fontWeight: 700 }}>
+            Close
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import authService from '../services/auth.service';
 import { parseApiError } from '../services/api-client';
@@ -21,6 +21,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<UserSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const isAuthenticated = !!user;
 
   // Initialize and verify session on load
   useEffect(() => {
@@ -68,6 +69,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
+  // Auto-logout after 1 hour (3600000 ms) of inactivity
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let timeoutId: any;
+
+    const resetTimer = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = setTimeout(() => {
+        console.log('Inactivity timeout reached. Logging out user.');
+        logout();
+      }, 3600000);
+    };
+
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
+
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    resetTimer();
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [isAuthenticated]);
+
   const handleLogoutCleanup = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -109,7 +144,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setError(null);
     setLoading(true);
     const refreshToken = localStorage.getItem('refresh_token');
@@ -122,11 +157,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     handleLogoutCleanup();
     setLoading(false);
-  };
+  }, []);
 
   const clearError = () => setError(null);
-
-  const isAuthenticated = !!user;
 
   return (
     <AuthContext.Provider

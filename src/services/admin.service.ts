@@ -12,6 +12,7 @@ import type {
   AdminMessageResponseDto,
   AuditLogResponseDto,
 } from '../types/admin';
+import type { StudentProfileResponseDto } from '../types/student';
 
 const buildQueryString = (query: AdminQueryDto) => {
   const params = new URLSearchParams();
@@ -36,6 +37,16 @@ export const adminService = {
 
   async getUser(id: string): Promise<ApiResponse<AdminUserResponseDto>> {
     const response = await apiClient.get<ApiResponse<AdminUserResponseDto>>(`/api/admin/users/${id}`);
+    return response.data;
+  },
+
+  async getStudentProfileByUserId(userId: string): Promise<ApiResponse<StudentProfileResponseDto>> {
+    const response = await apiClient.get<ApiResponse<StudentProfileResponseDto>>(`/api/admin/users/${userId}/student-profile`);
+    return response.data;
+  },
+
+  async getShopOwnerProfileByUserId(userId: string): Promise<ApiResponse<AdminShopOwnerResponseDto>> {
+    const response = await apiClient.get<ApiResponse<AdminShopOwnerResponseDto>>(`/api/admin/users/${userId}/shop-owner-profile`);
     return response.data;
   },
 
