@@ -316,6 +316,28 @@ export const Register: React.FC = () => {
                 </Link>
               </Typography>
             </Box>
+
+            <Box sx={{ mt: 4, textAlign: 'center', borderTop: '1px solid #f1f5f9', pt: 2 }}>
+              <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.75rem', fontFamily: '"Outfit", sans-serif' }}>
+                Developed & Powered by{' '}
+                <Link
+                  href="https://cyfler.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    color: '#0f2c59',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    '&:hover': {
+                      textDecoration: 'underline',
+                      color: selectedRole === 'ShopOwner' ? '#0d9488' : '#1b4a8f',
+                    },
+                  }}
+                >
+                  Cyfler.com
+                </Link>
+              </Typography>
+            </Box>
           </CardContent>
         </Card>
       </Container>

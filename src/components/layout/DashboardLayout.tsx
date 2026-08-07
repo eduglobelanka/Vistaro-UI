@@ -271,6 +271,29 @@ export const DashboardLayout: React.FC = () => {
             </Typography>
           </Box>
         </Box>
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', my: 1.5 }} />
+        <Typography 
+          variant="caption" 
+          align="center" 
+          sx={{ 
+            color: 'rgba(255, 255, 255, 0.35)', 
+            display: 'block', 
+            fontSize: '0.725rem',
+            fontFamily: '"Outfit", sans-serif',
+            '& a': {
+              color: 'rgba(255, 255, 255, 0.5)',
+              textDecoration: 'none',
+              fontWeight: 600,
+              transition: 'color 0.2s',
+              '&:hover': {
+                color: 'secondary.main',
+                textDecoration: 'underline'
+              }
+            }
+          }}
+        >
+          Powered by <a href="https://cyfler.com" target="_blank" rel="noopener noreferrer">Cyfler.com</a>
+        </Typography>
       </Box>
     </Box>
   );
